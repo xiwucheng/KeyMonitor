@@ -3,16 +3,15 @@
 
 #include "stdafx.h"
 #include <stdio.h>
-#include <Windows.h>
+#include "KeyServer.h"
 
 #define SLEEP_TIME 2000 //间隔时间
 #define SERVICE_NAME TEXT("KeyMonitor")
-bool brun = false;
+CKeyServer* pServer = NULL;
 SERVICE_STATUS servicestatus;
 SERVICE_STATUS_HANDLE hstatus;
 void WINAPI ServiceMain();
 void WINAPI CtrlHandler(DWORD request);
-
 void LogEvent(LPCTSTR pFormat, ...)
 {
 	TCHAR    chMsg[256];
@@ -42,18 +41,18 @@ void WINAPI ServiceMain()
 	servicestatus.dwWin32ExitCode = 0;
 	servicestatus.dwServiceSpecificExitCode = 0;
 	servicestatus.dwCheckPoint = 0;
-	servicestatus.dwWaitHint = 0;
+	servicestatus.dwWaitHint = 1000;
 	hstatus = ::RegisterServiceCtrlHandler(SERVICE_NAME, CtrlHandler);
 
-	if (hstatus == 0)
-	{
-		return;
-	}
+	pServer = new CKeyServer();
+	pServer->Init();
+	//-------------------------------------------------------------------//
 
 	//向SCM 报告运行状态
 	servicestatus.dwCurrentState = SERVICE_RUNNING;
 	SetServiceStatus(hstatus, &servicestatus);
 	//在此处添加你自己希望服务做的工作，在这里我做的工作是获得当前可用的物理和虚拟内存信息
+	LogEvent(_T("KeyMonitor Service is running!"));
 
 }
 
@@ -63,12 +62,15 @@ void WINAPI CtrlHandler(DWORD request)
 	switch (request)
 	{
 	case SERVICE_CONTROL_STOP:
-		brun = false;
+	case SERVICE_CONTROL_SHUTDOWN:
+		pServer->Uninit();
 		servicestatus.dwCurrentState = SERVICE_STOPPED;
 		break;
-	case SERVICE_CONTROL_SHUTDOWN:
-		brun = false;
-		servicestatus.dwCurrentState = SERVICE_STOPPED;
+	case SERVICE_CONTROL_CONTINUE:
+		servicestatus.dwCurrentState = SERVICE_RUNNING;
+		break;
+	case SERVICE_CONTROL_PAUSE:
+		servicestatus.dwCurrentState = SERVICE_PAUSED;
 		break;
 	default:
 		break;
@@ -103,10 +105,11 @@ BOOL Install()
 		return TRUE;
 
 	//打开服务控制管理器  
+	SERVICE_DESCRIPTION sd = { TEXT("OEM Activation 3.0 Key Collection Service")};
 	SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (hSCM == NULL)
 	{
-		MessageBox(NULL, _T("Couldn't open service manager"), SERVICE_NAME, MB_OK);
+		LogEvent(_T("Couldn't open service manager"));
 		return FALSE;
 	}
 
@@ -118,16 +121,16 @@ BOOL Install()
 	SC_HANDLE hService = ::CreateService(
 		hSCM, SERVICE_NAME, SERVICE_NAME,
 		SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-		SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+		SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
 		szFilePath, NULL, NULL, _T(""), NULL, NULL);
 
 	if (hService == NULL)
 	{
 		::CloseServiceHandle(hSCM);
-		MessageBox(NULL, _T("Couldn't create service"), SERVICE_NAME, MB_OK);
+		LogEvent(_T("Couldn't create service"));
 		return FALSE;
 	}
-
+	ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd);
 	::CloseServiceHandle(hService);
 	::CloseServiceHandle(hSCM);
 	return TRUE;
@@ -142,7 +145,7 @@ BOOL Uninstall()
 
 	if (hSCM == NULL)
 	{
-		MessageBox(NULL, _T("Couldn't open service manager"), SERVICE_NAME, MB_OK);
+		LogEvent(_T("Couldn't open service manager"));
 		return FALSE;
 	}
 
@@ -151,7 +154,7 @@ BOOL Uninstall()
 	if (hService == NULL)
 	{
 		::CloseServiceHandle(hSCM);
-		MessageBox(NULL, _T("Couldn't open service"), SERVICE_NAME, MB_OK);
+		LogEvent(_T("Couldn't open service"));
 		return FALSE;
 	}
 	SERVICE_STATUS status;
@@ -171,6 +174,16 @@ BOOL Uninstall()
 
 int _tmain(int argc, TCHAR** argv)
 {
+	//---------------------------------------------
+#if 0
+	pServer = new CKeyServer();
+	pServer->Init();
+	while (1) Sleep(500);
+	//pServer->ExecuteSQL(TEXT("INSERT CollectedKeyInfo VALUES('11111','22222','33333','44444','55555','66666','77777',GETDATE())"));
+	//......
+	pServer->Uninit();
+#endif
+	//---------------------------------------------
 	SERVICE_TABLE_ENTRY entrytable[2];
 
 	entrytable[0].lpServiceName = SERVICE_NAME;

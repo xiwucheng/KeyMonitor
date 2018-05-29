@@ -24,6 +24,18 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="KeyInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPSocket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyServer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -32,5 +44,19 @@
     <ClCompile Include="KeyMonitor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="KeyInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPSocket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KeyMonitor.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
