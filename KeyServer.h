@@ -2,7 +2,7 @@
 #include "TCPSocket.h"
 #include "KeyInfo.h"
 #include <list>
-#import "c:\program files\common files\system\ado\msado15.dll" no_namespace rename("EOF","adoEOF")
+#import "c:\program files\common files\system\ado\msado15.dll" no_namespace rename("EOF","adoEOF") rename("BOF","adoBOF")
 using namespace std;
 
 class CKeyServer
@@ -24,4 +24,5 @@ public:
 	static void CALLBACK OnServerError(void* pOwner, CTCPServer* pServer, int nErrorCode);
 public:
 	_ConnectionPtr m_pConn;
+	_RecordsetPtr m_pRds;
 };

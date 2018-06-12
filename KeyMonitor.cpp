@@ -6,7 +6,7 @@
 #include "KeyServer.h"
 
 #define SLEEP_TIME 2000 //间隔时间
-#define SERVICE_NAME TEXT("KeyMonitor")
+#define SERVICE_NAME TEXT("KeyAuthMonitor")
 CKeyServer* pServer = NULL;
 SERVICE_STATUS servicestatus;
 SERVICE_STATUS_HANDLE hstatus;
@@ -105,7 +105,7 @@ BOOL Install()
 		return TRUE;
 
 	//打开服务控制管理器  
-	SERVICE_DESCRIPTION sd = { TEXT("OEM Activation 3.0 Key Collection Service")};
+	SERVICE_DESCRIPTION sd = { TEXT("Assistant Authorization Service")};
 	SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (hSCM == NULL)
 	{
@@ -176,9 +176,36 @@ int _tmain(int argc, TCHAR** argv)
 {
 	//---------------------------------------------
 #if 0
+	long rdset = 0;
 	pServer = new CKeyServer();
 	pServer->Init();
-	while (1) Sleep(500);
+	//while (1) Sleep(500);
+	try
+	{
+		if (pServer->m_pConn->GetState() & adStateOpen)
+		{
+			pServer->m_pRds->Open(TEXT("SELECT hash FROM Authory where hash = 'WD-WXX1AC6JU2R5'"), pServer->m_pConn.GetInterfacePtr(), adOpenDynamic, adLockOptimistic, adCmdText);
+			if (pServer->m_pRds->adoBOF && pServer->m_pRds->adoEOF)
+			{
+				rdset = 0;
+			}
+			else
+			{
+				rdset = 1;
+			}
+			rdset = pServer->m_pRds->RecordCount;
+			pServer->m_pRds->Close();
+			//if (rdset == 0)
+			//{
+				return 1;
+			//}
+			//pCustom->SendData("allowed", strlen("allowed"));
+		}
+}
+	catch (_com_error e)
+	{
+		OutputDebugString(e.ErrorMessage());
+	}
 	//pServer->ExecuteSQL(TEXT("INSERT CollectedKeyInfo VALUES('11111','22222','33333','44444','55555','66666','77777',GETDATE())"));
 	//......
 	pServer->Uninit();
