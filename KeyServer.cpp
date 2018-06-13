@@ -135,6 +135,8 @@ int CALLBACK CKeyServer::OnClientRead(void* pOwner, CTCPCustom* pCustom, char* b
 							p->m_pRds->Close();
 							if (rdset == 0)
 							{
+								_stprintf_s(strSQL, TEXT("INSERT INTO Authory VALUES('%S',GETDATE(),'0','0')"), buf);
+								p->ExecuteSQL(strSQL);
 								return 1;
 							}
 							pCustom->SendData("allowed", strlen("allowed"));
